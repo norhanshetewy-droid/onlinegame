@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Algorithm Challenge</title>
+  <style>
+    :root {
+      --ink: #edf7ff;
+      --muted: #91a7bf;
+      --panel: rgba(13, 24, 47, .82);
+      --panel-light: rgba(24, 39, 70, .78);
+      --line: rgba(133, 182, 255, .2);
+      --cyan: #5ee7f2;
+      --blue: #6e8cff;
+      --violet: #b17bff;
+      --gold: #ffd166;
+      --green: #64e9a8;
+      --red: #ff758f;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .38);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #070d1c;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(1px);
+    }
+    body::before {
+      inset: 0;
+      background: radial-gradient(circle at 12% 12%, rgba(86, 116, 255, .22), transparent 30%), radial-gradient(circle at 88% 78%, rgba(70, 213, 230, .14), transparent 28%), linear-gradient(145deg, #070d1c 0%, #10183b 52%, #0a142b 100%);
+    }
+    body::after {
+      width: 480px; height: 480px; right: -210px; top: -160px;
+      border: 1px solid rgba(94, 231, 242, .15); border-radius: 50%;
+      box-shadow: 0 0 0 35px rgba(94, 231, 242, .025), 0 0 0 90px rgba(94, 231, 242, .02);
+    }
+    button { font: inherit; }
+    .app { width: min(1120px, calc(100% - 32px)); margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 26px 0 16px; gap: 18px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: .77rem; letter-spacing: .16em; font-weight: 800; color: var(--cyan); }
+    .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(94, 231, 242, .55); border-radius: 12px; background: rgba(94, 231, 242, .1); box-shadow: 0 0 22px rgba(94, 231, 242, .2); font-size: 1.25rem; }
+    .screen { flex: 1; display: grid; align-content: center; padding: 26px 0 44px; }
+    .hidden { display: none !important; }
+    .hero { display: grid; grid-template-columns: .88fr 1.12fr; align-items: center; gap: 70px; }
+    .hero-copy { animation: rise .7s ease both; }
+    .eyebrow { color: var(--cyan); font-size: .78rem; font-weight: 800; letter-spacing: .19em; text-transform: uppercase; }
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 18px; max-width: 650px; font-size: clamp(2.8rem, 7vw, 5.8rem); line-height: .93; letter-spacing: -.045em; text-transform: uppercase; }
+    h1 span { color: var(--cyan); text-shadow: 0 0 34px rgba(94, 231, 242, .32); }
+    .hero-copy p { max-width: 470px; color: var(--muted); font-size: 1.1rem; line-height: 1.65; }
+    .primary-btn, .secondary-btn { cursor: pointer; border: 0; border-radius: 14px; padding: 15px 22px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; transition: transform .2s, box-shadow .2s, background .2s; }
+    .primary-btn { color: #071022; background: linear-gradient(110deg, var(--cyan), #8ca5ff); box-shadow: 0 12px 30px rgba(94, 231, 242, .2); }
+    .primary-btn:hover, .secondary-btn:hover { transform: translateY(-3px); }
+    .primary-btn:hover { box-shadow: 0 16px 38px rgba(94, 231, 242, .35); }
+    .secondary-btn { color: var(--ink); background: rgba(255,255,255,.1); border: 1px solid var(--line); }
+    .robot-stage { position: relative; display: grid; place-items: center; min-height: 420px; animation: float 4s ease-in-out infinite; }
+    .robot-aura { position: absolute; width: 310px; height: 310px; border-radius: 50%; background: radial-gradient(circle, rgba(94, 231, 242, .28), transparent 67%); }
+    .robot { position: relative; width: 180px; height: 205px; border: 2px solid var(--cyan); border-radius: 55px 55px 40px 40px; background: linear-gradient(145deg, #1a2b56, #101633); box-shadow: 0 0 36px rgba(94, 231, 242, .3), inset 0 0 32px rgba(94, 231, 242, .08); }
+    .robot::before { content: ""; position: absolute; width: 9px; height: 30px; left: 50%; top: -35px; transform: translateX(-50%); border-radius: 7px; background: var(--cyan); box-shadow: 0 0 15px var(--cyan); }
+    .robot::after { content: ""; position: absolute; width: 18px; height: 18px; left: 50%; top: -47px; transform: translateX(-50%); border: 3px solid var(--cyan); border-radius: 50%; background: #111b3a; box-shadow: 0 0 18px var(--cyan); }
+    .robot-face { margin: 42px 22px 0; height: 80px; border-radius: 26px; background: #081127; border: 1px solid rgba(94,231,242,.4); display: flex; justify-content: center; align-items: center; gap: 28px; }
+    .eye { width: 24px; height: 30px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 18px var(--cyan); }
+    .robot-mouth { width: 48px; height: 10px; border-bottom: 3px solid var(--violet); position: absolute; left: 66px; top: 135px; border-radius: 50%; }
+    .robot-panel { position: absolute; right: 1%; bottom: 12%; padding: 13px 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(11, 20, 42, .78); color: var(--muted); font-size: .78rem; box-shadow: var(--shadow); }
+    .robot-panel strong { display: block; color: var(--cyan); margin-bottom: 3px; }
+
+    .game-shell { width: min(900px, 100%); margin: 0 auto; }
+    .game-head { margin-bottom: 22px; }
+    .stats { display: grid; grid-template-columns: 1fr repeat(3, auto); gap: 11px; align-items: center; margin-bottom: 14px; }
+    .level-label { color: var(--muted); font-size: .82rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .stat { padding: 10px 13px; border: 1px solid var(--line); border-radius: 11px; background: rgba(9, 19, 42, .68); color: var(--muted); font-size: .78rem; }
+    .stat strong { color: var(--ink); font-size: .96rem; margin-left: 4px; }
+    .score-bump { animation: bump .45s ease; }
+    .progress-track { height: 8px; border-radius: 20px; overflow: hidden; background: rgba(255,255,255,.09); }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--violet), var(--cyan)); box-shadow: 0 0 15px rgba(94, 231, 242, .4); transition: width .55s ease; }
+    .mission-card { position: relative; padding: clamp(22px, 5vw, 46px); border: 1px solid var(--line); border-radius: 26px; background: linear-gradient(145deg, rgba(21, 36, 70, .88), rgba(11, 18, 39, .92)); box-shadow: var(--shadow); overflow: hidden; animation: card-in .5s ease both; }
+    .mission-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: .8; }
+    .mission-kicker { color: var(--violet); font-size: .75rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+    h2 { margin-bottom: 11px; font-size: clamp(1.65rem, 4vw, 2.8rem); letter-spacing: -.03em; }
+    .mission-intro { margin-bottom: 30px; max-width: 700px; color: var(--muted); line-height: 1.6; }
+    .robot-feedback { min-height: 28px; margin: 0 0 17px; color: var(--cyan); font-weight: 800; }
+    .feedback-pop { animation: feedback .35s ease; }
+    .options { display: grid; gap: 12px; }
+    .option-btn, .step-btn { cursor: pointer; text-align: left; color: var(--ink); border: 1px solid rgba(133,182,255,.2); border-radius: 13px; background: rgba(255,255,255,.045); transition: transform .2s, border .2s, background .2s; }
+    .option-btn { width: 100%; padding: 16px 17px; }
+    .option-btn:hover, .step-btn:hover { transform: translateX(5px); border-color: var(--cyan); background: rgba(94,231,242,.1); }
+    .option-btn.correct { border-color: var(--green); background: rgba(100,233,168,.15); animation: correct .5s ease; }
+    .option-btn.wrong { border-color: var(--red); background: rgba(255,117,143,.14); animation: shake .4s ease; }
+    .option-btn:disabled { cursor: default; }
+    .factory-display, .clue-strip { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 8px 0 25px; padding: 18px; border: 1px dashed rgba(94,231,242,.34); border-radius: 15px; background: rgba(94,231,242,.05); color: var(--cyan); font-size: 1.35rem; font-weight: 900; }
+    .factory-display small { color: var(--muted); font-size: .75rem; letter-spacing: .1em; }
+    .clue-strip { justify-content: space-around; color: var(--violet); font-size: .78rem; letter-spacing: .1em; }
+    .sequence-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 22px; }
+    .step-btn { padding: 16px; min-height: 78px; }
+    .step-btn.selected { border-color: var(--violet); background: rgba(177,123,255,.15); transform: scale(.98); }
+    .step-btn:disabled { opacity: .62; cursor: default; }
+    .sequence-result { min-height: 48px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 18px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.16); color: var(--muted); font-size: .86rem; }
+    .sequence-result span { padding: 7px 10px; border-radius: 8px; color: var(--ink); background: rgba(110,140,255,.2); }
+    .action-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .message { color: var(--muted); font-size: .88rem; }
+    .transition-card, .result-card { width: min(700px, 100%); margin: 0 auto; text-align: center; padding: clamp(28px, 7vw, 60px); border: 1px solid var(--line); border-radius: 26px; background: linear-gradient(145deg, rgba(21,36,70,.9), rgba(11,18,39,.94)); box-shadow: var(--shadow); animation: card-in .5s ease both; }
+    .transition-card h2, .result-card h2 { color: var(--cyan); }
+    .transition-points { color: var(--gold); font-size: 1.4rem; font-weight: 900; margin: 25px 0; }
+    .stars { color: var(--gold); font-size: 2.3rem; letter-spacing: .1em; margin: 17px 0; text-shadow: 0 0 20px rgba(255,209,102,.3); }
+    .rank { color: var(--violet); font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .final-score { font-size: clamp(3rem, 9vw, 5rem); font-weight: 900; letter-spacing: -.05em; }
+    .final-score span { color: var(--cyan); }
+    .shake-card { animation: shake .4s ease; }
+    .timeout { color: var(--gold); }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    @keyframes bump { 50% { transform: scale(1.18); color: var(--gold); } }
+    @keyframes correct { 50% { transform: scale(1.02); box-shadow: 0 0 25px rgba(100,233,168,.3); } }
+    @keyframes shake { 20%,60% { transform: translateX(-7px); } 40%,80% { transform: translateX(7px); } }
+    @keyframes feedback { 50% { transform: scale(1.04); } }
+    @media (max-width: 760px) {
+      .hero { grid-template-columns: 1fr; gap: 22px; }
+      .robot-stage { min-height: 260px; order: -1; transform: scale(.76); margin: -45px 0 -35px; }
+      .stats { grid-template-columns: 1fr 1fr 1fr; }
+      .level-label { grid-column: 1 / -1; }
+      .stat { text-align: center; }
+      .topbar { padding-top: 17px; }
+    }
+    @media (max-width: 420px) {
+      .app { width: min(100% - 22px, 1120px); }
+      h1 { font-size: 2.8rem; }
+      .mission-card { padding: 22px 17px; }
+      .stat { padding: 9px 5px; font-size: .68rem; }
+      .stat strong { display: block; margin: 3px 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">✦</div> NEURAL LAB / 09</div>
+      <div class="eyebrow">OFFLINE TRAINING SIMULATION</div>
+    </header>
+
+    <main id="welcomeScreen" class="screen">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Mission briefing</div>
+          <h1>AI Algorithm <span>Challenge</span></h1>
+          <p>Think. Solve. Build. Master AI. Complete five missions and prove that your logic can guide an intelligent system.</p>
+          <button id="startButton" class="primary-btn" type="button">Start Game <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="robot-stage" aria-label="AI robot mascot">
+          <div class="robot-aura"></div>
+          <div class="robot">
+            <div class="robot-face"><div class="eye"></div><div class="eye"></div></div>
+            <div class="robot-mouth"></div>
+          </div>
+          <div class="robot-panel"><strong>UNIT A-09 ONLINE</strong>Ready for your next idea.</div>
+        </div>
+      </section>
+    </main>
+
+    <main id="gameScreen" class="screen hidden">
+      <section class="game-shell">
+        <div class="game-head">
+          <div class="stats">
+            <div id="levelLabel" class="level-label">Level 1 / 5</div>
+            <div class="stat">Score <strong id="scoreValue">0</strong></div>
+            <div class="stat">Time <strong id="timerValue">60</strong></div>
+            <div class="stat">Progress <strong id="progressValue">0%</strong></div>
+          </div>
+          <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+        </div>
+        <div id="missionHost"></div>
+      </section>
+    </main>
+
+    <main id="transitionScreen" class="screen hidden">
+      <section class="transition-card">
+        <div class="eyebrow">Mission archived</div>
+        <h2 id="transitionTitle">LEVEL COMPLETE!</h2>
+        <p id="transitionMessage" class="mission-intro">Your logic is getting sharper.</p>
+        <div id="transitionPoints" class="transition-points">✦ +10 POINTS</div>
+        <button id="continueButton" class="primary-btn" type="button">Continue →</button>
+      </section>
+    </main>
+
+    <main id="resultScreen" class="screen hidden">
+      <section class="result-card">
+        <div class="eyebrow">Mission report</div>
+        <h2>Challenge Complete!</h2>
+        <div class="final-score"><span id="finalScore">0</span> / 50</div>
+        <div id="starDisplay" class="stars" aria-label="result stars">★★★★★</div>
+        <div id="rankDisplay" class="rank">AI Algorithm Master</div>
+        <p id="resultMessage" class="mission-intro" style="margin: 24px auto 28px;">Every great intelligent system starts with clear thinking.</p>
+        <button id="playAgainButton" class="primary-btn" type="button">Play Again ↻</button>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    "use strict";
+
+    const LEVELS = [
+      { name: "Build the Algorithm", type: "sequence", points: 10 },
+      { name: "Algorithm Hunter", type: "questions", points: 10, questions: [
+        { prompt: "What is an algorithm?", options: ["A step-by-step set of instructions to solve a problem.", "A collection of random facts with no order.", "A device that stores electricity.", "A picture used to decorate a program."], answer: "A step-by-step set of instructions to solve a problem.", explanation: "Algorithms give us clear steps for reaching a result." },
+        { prompt: "Why are algorithms important in problem solving?", options: ["They provide an organized way to reach a goal.", "They make every problem disappear without thinking.", "They only work when a computer is switched off.", "They replace all data with guesses."], answer: "They provide an organized way to reach a goal.", explanation: "A clear process makes a solution easier to follow and check." }
+      ]},
+      { name: "Loop Factory", type: "questions", points: 10, questions: [
+        { prompt: "A loop repeats an instruction 4 times. How many times is the instruction performed?", options: ["2 times", "3 times", "4 times", "8 times"], answer: "4 times", visual: true, explanation: "The loop count tells the machine how many repetitions to make." },
+        { prompt: "A loop prints 'AI' 3 times. What is the output?", options: ["AI AI AI", "AI 3", "3 AI AI AI", "Only one AI"], answer: "AI AI AI", visual: true, explanation: "The instruction inside the loop runs once during each repetition." }
+      ]},
+      { name: "AI Detective", type: "questions", points: 10, questions: [
+        { prompt: "An AI system is shown many examples before predicting a new example. What is it learning from?", options: ["Data and examples", "A battery and a screen", "Only its name", "A random number"], answer: "Data and examples", detective: true, explanation: "Examples in data help an AI find useful patterns." },
+        { prompt: "If training data is biased, what can happen to an AI system?", options: ["Its decisions may also be biased.", "It will always become faster.", "It will stop needing any data.", "It will automatically become fair."], answer: "Its decisions may also be biased.", detective: true, explanation: "An AI can repeat unfair patterns that appear in its training data." }
+      ]},
+      { name: "ML vs DL", type: "questions", points: 10, questions: [
+        { prompt: "Which statement best describes Machine Learning?", options: ["Systems learn patterns from data to make predictions or decisions.", "A person writes every answer before the system starts.", "A computer only follows a timer.", "A system learns without using any examples."], answer: "Systems learn patterns from data to make predictions or decisions.", explanation: "Machine Learning uses data to find patterns and make useful decisions." },
+        { prompt: "Deep Learning is a type of Machine Learning that commonly uses what?", options: ["Neural networks with many layers.", "A list of classroom rules only.", "A single fixed calculator button.", "No data at all."], answer: "Neural networks with many layers.", explanation: "Deep Learning uses layered neural networks to learn complex patterns." }
+      ]}
+    ];
+
+    const sequenceSteps = ["Define the problem", "Collect relevant data", "Analyze the data", "Choose an algorithm", "Check the result"];
+    const state = { levelIndex: 0, questionIndex: 0, score: 0, timerId: null, timeLeft: 60, locked: false, sequence: [], sequenceSteps: [] };
+    const $ = (id) => document.getElementById(id);
+
+    function shuffle(items) {
+      const copy = items.slice();
+      for (let index = copy.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+      }
+      return copy;
+    }
+
+    function showScreen(id) {
+      ["welcomeScreen", "gameScreen", "transitionScreen", "resultScreen"].forEach((screenId) => $(screenId).classList.toggle("hidden", screenId !== id));
+    }
+
+    function updateHeader() {
+      const level = LEVELS[state.levelIndex];
+      const totalChallenges = 1 + LEVELS.slice(1).reduce((sum, item) => sum + item.questions.length, 0);
+      const completed = state.levelIndex === 0 ? 0 : 1 + LEVELS.slice(1, state.levelIndex).reduce((sum, item) => sum + item.questions.length, 0) + state.questionIndex;
+      const percentage = Math.round((completed / totalChallenges) * 100);
+      $("levelLabel").textContent = `Level ${state.levelIndex + 1} / 5 · ${level.name}`;
+      $("scoreValue").textContent = state.score;
+      $("timerValue").textContent = state.timeLeft;
+      $("progressValue").textContent = `${percentage}%`;
+      $("progressFill").style.width = `${percentage}%`;
+    }
+
+    function updateScore(points) {
+      state.score += points;
+      $("scoreValue").classList.remove("score-bump");
+      void $("scoreValue").offsetWidth;
+      $("scoreValue").classList.add("score-bump");
+      updateHeader();
+    }
+
+    function startTimer() {
+      clearInterval(state.timerId);
+      state.timeLeft = 60;
+      updateHeader();
+      state.timerId = setInterval(() => {
+        state.timeLeft -= 1;
+        updateHeader();
+        if (state.timeLeft <= 0) {
+          clearInterval(state.timerId);
+          state.timerId = null;
+          handleTimeout();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() { clearInterval(state.timerId); state.timerId = null; }
+
+    function handleTimeout() {
+      if (state.locked) return;
+      state.locked = true;
+      const feedback = $("feedback");
+      if (feedback) { feedback.className = "robot-feedback timeout feedback-pop"; feedback.textContent = "⏰ Time's up! The mission will move on."; }
+      const buttons = document.querySelectorAll(".option-btn, .step-btn");
+      buttons.forEach((button) => { button.disabled = true; });
+      const continueButton = $("timeoutButton");
+      if (continueButton) continueButton.classList.remove("hidden");
+      if (!continueButton && state.levelIndex === 0) {
+        state.sequence = [];
+        setTimeout(() => loadLevel(), 900);
+      }
+    }
+
+    function loadLevel() {
+      stopTimer();
+      state.locked = false;
+      state.sequence = [];
+      state.questionIndex = 0;
+      showScreen("gameScreen");
+      updateHeader();
+      if (state.levelIndex === 0) loadSequence(); else loadQuestion();
+    }
+
+    function loadSequence() {
+      state.sequenceSteps = shuffle(sequenceSteps);
+      const level = LEVELS[0];
+      $("missionHost").innerHTML = `
+        <article class="mission-card">
+          <div class="mission-kicker">Level 1 · ${level.name}</div>
+          <h2>Build the perfect solution path</h2>
+          <p class="mission-intro">The steps are scrambled. Click each step in the order an intelligent problem solver should use them.</p>
+          <p id="feedback" class="robot-feedback">🤖 Select the first step to begin.</p>
+          <div id="sequenceBoard" class="sequence-board"></div>
+          <div id="sequenceResult" class="sequence-result">Your sequence will appear here.</div>
+          <div class="action-row"><button id="sequenceCheck" class="primary-btn" type="button">Check Sequence</button><button id="sequenceReset" class="secondary-btn" type="button">Reset</button><span id="sequenceMessage" class="message"></span></div>
+        </article>`;
+      const board = $("sequenceBoard");
+      state.sequenceSteps.forEach((step, index) => {
+        const button = document.createElement("button");
+        button.className = "step-btn";
+        button.type = "button";
+        button.dataset.step = step;
+        button.innerHTML = `<strong>${String(index + 1).padStart(2, "0")}</strong><br>${step}`;
+        button.addEventListener("click", () => selectStep(button, step));
+        board.appendChild(button);
+      });
+      $("sequenceCheck").addEventListener("click", checkSequence);
+      $("sequenceReset").addEventListener("click", resetSequence);
+      startTimer();
+    }
+
+    function selectStep(button, step) {
+      if (state.locked || button.disabled) return;
+      state.sequence.push(step);
+      button.disabled = true;
+      button.classList.add("selected");
+      const result = $("sequenceResult");
+      result.innerHTML = state.sequence.map((item, index) => `<span>${index + 1}. ${item}</span>`).join("");
+    }
+
+    function resetSequence() {
+      if (state.locked) return;
+      state.sequence = [];
+      $("sequenceResult").textContent = "Your sequence will appear here.";
+      document.querySelectorAll(".step-btn").forEach((button) => { button.disabled = false; button.classList.remove("selected"); });
+      $("feedback").textContent = "🤖 Select the first step to begin.";
+      $("sequenceMessage").textContent = "";
+    }
+
+    function checkSequence() {
+      if (state.locked || state.sequence.length !== sequenceSteps.length) {
+        if (!state.locked) $("sequenceMessage").textContent = "Choose all five steps first.";
+        return;
+      }
+      state.locked = true;
+      stopTimer();
+      const isCorrect = state.sequence.every((step, index) => step === sequenceSteps[index]);
+      if (isCorrect) {
+        $("feedback").textContent = "🤖 Excellent! Your algorithm works!";
+        $("feedback").className = "robot-feedback feedback-pop";
+        updateScore(10);
+        setTimeout(() => completeLevel(), 900);
+      } else {
+        $("feedback").textContent = "🤖 Oops! Check the order again.";
+        $("feedback").className = "robot-feedback timeout feedback-pop";
+        $("sequenceMessage").textContent = "Reset the steps and try again.";
+        $("missionHost").querySelector(".mission-card").classList.add("shake-card");
+        state.locked = false;
+        document.querySelectorAll(".step-btn").forEach((button) => { button.disabled = false; button.classList.remove("selected"); });
+        state.sequence = [];
+        $("sequenceResult").textContent = "Your sequence will appear here.";
+        startTimer();
+      }
+    }
+
+    function loadQuestion() {
+      const level = LEVELS[state.levelIndex];
+      const question = level.questions[state.questionIndex];
+      const shuffledOptions = shuffle(question.options);
+      const visual = question.visual ? `<div class="factory-display"><span>🔁 × 4</span><small>INSTRUCTION REPEATS</small><span>AI&nbsp; AI&nbsp; AI&nbsp; AI</span></div>` : "";
+      const clue = question.detective ? `<div class="clue-strip"><span>🔍 DATA CLUE</span><span>🔍 PATTERN</span><span>🔍 PREDICTION</span></div>` : "";
+      $("missionHost").innerHTML = `
+        <article class="mission-card">
+          <div class="mission-kicker">Level ${state.levelIndex + 1} · ${level.name}</div>
+          <h2>${question.prompt}</h2>
+          <p class="mission-intro">${question.explanation}</p>
+          ${visual}${clue}
+          <p id="feedback" class="robot-feedback">🤖 Read the clues, then choose your answer.</p>
+          <div id="options" class="options"></div>
+          <div class="action-row"><span id="questionMessage" class="message">Challenge ${state.questionIndex + 1} of ${level.questions.length}</span><button id="timeoutButton" class="secondary-btn hidden" type="button">Continue →</button></div>
+        </article>`;
+      const options = $("options");
+      shuffledOptions.forEach((option) => {
+        const button = document.createElement("button");
+        button.className = "option-btn";
+        button.type = "button";
+        button.textContent = option;
+        button.dataset.answer = option;
+        button.addEventListener("click", () => checkAnswer(button, question));
+        options.appendChild(button);
+      });
+      $("timeoutButton").addEventListener("click", () => advanceQuestion(false));
+      startTimer();
+    }
+
+    function checkAnswer(button, question) {
+      if (state.locked) return;
+      state.locked = true;
+      stopTimer();
+      const allButtons = document.querySelectorAll(".option-btn");
+      allButtons.forEach((item) => { item.disabled = true; });
+      if (button.dataset.answer === question.answer) {
+        button.classList.add("correct");
+        $("feedback").textContent = "🤖 Correct! Great job!";
+        $("feedback").className = "robot-feedback feedback-pop";
+        updateScore(5);
+        setTimeout(() => advanceQuestion(true), 850);
+      } else {
+        button.classList.add("wrong");
+        const correctButton = [...allButtons].find((item) => item.dataset.answer === question.answer);
+        if (correctButton) correctButton.classList.add("correct");
+        $("feedback").textContent = "🤖 Not quite. The highlighted answer is the best choice.";
+        $("feedback").className = "robot-feedback timeout feedback-pop";
+        setTimeout(() => advanceQuestion(false), 1150);
+      }
+    }
+
+    function advanceQuestion() {
+      state.questionIndex += 1;
+      if (state.questionIndex >= LEVELS[state.levelIndex].questions.length) completeLevel();
+      else { state.locked = false; loadQuestion(); }
+    }
+
+    function completeLevel() {
+      stopTimer();
+      const nextLevel = LEVELS[state.levelIndex + 1];
+      if (!nextLevel) { endGame(); return; }
+      $("transitionTitle").textContent = `Level ${state.levelIndex + 1} Complete!`;
+      $("transitionMessage").textContent = `Next mission: ${nextLevel.name}. Your reasoning is powering up.`;
+      $("transitionPoints").textContent = `✦ +${LEVELS[state.levelIndex].points} POINTS`;
+      showScreen("transitionScreen");
+    }
+
+    function endGame() {
+      stopTimer();
+      const score = state.score;
+      const stars = score === 50 ? 5 : score >= 40 ? 4 : score >= 30 ? 3 : score >= 20 ? 2 : 1;
+      const rank = score === 50 ? "🏆 AI Algorithm Master" : score >= 40 ? "🥇 AI Expert" : score >= 30 ? "🥈 AI Explorer" : score >= 20 ? "🥉 AI Learner" : "💡 Keep Practicing";
+      $("finalScore").textContent = score;
+      $("starDisplay").textContent = "★".repeat(stars) + "☆".repeat(5 - stars);
+      $("rankDisplay").textContent = rank;
+      $("resultMessage").textContent = score >= 40 ? "You connected logic, data, and learning like a true AI problem solver." : "Every mission was practice for your next breakthrough. Keep exploring.";
+      showScreen("resultScreen");
+    }
+
+    function startGame() {
+      state.levelIndex = 0; state.questionIndex = 0; state.score = 0; state.locked = false; state.sequence = [];
+      loadLevel();
+    }
+
+    $("startButton").addEventListener("click", startGame);
+    $("continueButton").addEventListener("click", () => { state.levelIndex += 1; loadLevel(); });
+    $("playAgainButton").addEventListener("click", startGame);
+  </script>
+</body>
+</html>
